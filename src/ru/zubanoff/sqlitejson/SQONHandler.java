@@ -7,11 +7,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  *
@@ -43,9 +44,11 @@ public class SQONHandler implements SQON {
     @Override
     public int insert(String key, String value) {
         try {
-            try (PreparedStatement statement = connection.prepareStatement("INSERT INTO main VALUES(?, ?)")) {
+            try (PreparedStatement statement = connection.prepareStatement("INSERT INTO main VALUES(?, ?, ?, ?)")) {
                 statement.setString(1, key);
                 statement.setString(2, value);
+                statement.setInt(3, (int) (new Date().getTime() / 1000));
+                statement.setInt(4, (int) (new Date().getTime() / 1000));
                 statement.executeUpdate();
             }
 
@@ -65,15 +68,21 @@ public class SQONHandler implements SQON {
     @Override
     public boolean update(int rowid, String value) {
         try {
-            try (PreparedStatement statement = connection.prepareStatement("UPDATE main SET value = ? WHERE rowid = ?")) {
-                statement.setString(1, value);
-                statement.setInt(2, rowid);
+            JSONObject jsonObject = new JSONObject(value);
+            if(jsonObject.has("jsonDBInfo")){
+                jsonObject.remove("jsonDBInfo");
+            }
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE main SET value = ?, modify = ? WHERE rowid = ?")) {
+                statement.setString(1, jsonObject.toString());
+                statement.setInt(2, (int) (new Date().getTime() / 1000));
+                statement.setInt(3, rowid);
                 statement.executeUpdate();
             }
 
             return true;
 
-        } catch (SQLException e) {
+        } catch (JSONException | SQLException e) {
             logger.log(Level.WARNING, null, e);
             return false;
         }
@@ -141,22 +150,24 @@ public class SQONHandler implements SQON {
     }
 
     @Override
-    public List<Map<Integer, String>> getValues(String key) {
+    public List<SQONItem> getValues(String key) {
         try {
-            ArrayList<Map<Integer, String>> resultSet = new ArrayList<>();
-            try (PreparedStatement statement = connection.prepareStatement("SELECT rowid, value FROM main WHERE key = ?")) {
+            ArrayList<SQONItem> resultSet = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement("SELECT rowid, value, date, modify FROM main WHERE key = ?")) {
                 statement.setString(1, key);
                 try (ResultSet rs = statement.executeQuery()) {
-                    while(rs.next()){
-                        Map<Integer, String> map = new HashMap<>();
-                        map.put(rs.getInt("rowid"), rs.getString("value"));
-                        resultSet.add(map);
+                    while (rs.next()) {
+                        resultSet.add(new SQONItem(
+                                rs.getInt("rowid"),
+                                rs.getString("value"),
+                                rs.getInt("date"),
+                                rs.getInt("modify")));
                     }
                 }
             }
-            
+
             return resultSet;
-            
+
         } catch (SQLException e) {
             Logger.getGlobal().log(Level.WARNING, null, e);
             return new ArrayList<>();
@@ -169,8 +180,36 @@ public class SQONHandler implements SQON {
     }
 
     @Override
-    public List<Map<Integer, String>> getValuesByIndex(String sqlRequest) {
+    public List<SQONItem> getValuesByIndex(String sqlRequest) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    @Override
+    public List<SQONItem> getValuesByKeyAndDate(String key, int dateStart, int dateEnd){
+        try {
+            ArrayList<SQONItem> resultSet = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT rowid, value, date, modify FROM main WHERE key = ? AND (date >= ? AND date <= ?)")) {
+                statement.setString(1, key);
+                statement.setInt(2, dateStart);
+                statement.setInt(3, dateEnd);
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        resultSet.add(new SQONItem(
+                                rs.getInt("rowid"),
+                                rs.getString("value"),
+                                rs.getInt("date"),
+                                rs.getInt("modify")));
+                    }
+                }
+            }
+
+            return resultSet;
+
+        } catch (SQLException e) {
+            Logger.getGlobal().log(Level.WARNING, null, e);
+            return new ArrayList<>();
+        }
     }
 
 }

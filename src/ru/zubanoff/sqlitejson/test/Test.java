@@ -9,6 +9,7 @@ package ru.zubanoff.sqlitejson.test;
 import java.util.List;
 import java.util.Map;
 import ru.zubanoff.sqlitejson.SQONHandler;
+import ru.zubanoff.sqlitejson.SQONItem;
 
 /**
  *
@@ -19,17 +20,19 @@ public class Test {
     SQONHandler handler;
     
     public Test(){
-        handler = new SQONHandler("jdbc:sqlite:/home/developer/bin/sqon/json.db");
+        //handler = new SQONHandler("jdbc:sqlite:/home/developer/bin/sqon/json.db");
+        handler = new SQONHandler("jdbc:sqlite:d:\\Projects\\NetBeansProjects\\SQON\\db\\json.db");
     }
     
     public static void main(String args[]){
         Test t = new Test();
         
         //t.testConnect();
-        //t.testInsert();
-        //t.testGetValuesByKey();
+        t.testInsert();
+        t.testGetValuesByKey();
+        t.testGetValuesByKeyAndDate();
         //t.testUpdate();
-        t.testDelete();
+        //t.testDelete();
     }
     
     private void testDelete(){
@@ -52,7 +55,12 @@ public class Test {
     }
     
     private void testGetValuesByKey(){
-        List<Map<Integer, String>> values = handler.getValues("employee");
+        List<SQONItem> values = handler.getValues("employee");
+        System.out.println(values);
+    }
+    
+    private void testGetValuesByKeyAndDate(){
+        List<SQONItem> values = handler.getValuesByKeyAndDate("employee", 0, 1386852650);
         System.out.println(values);
     }
     

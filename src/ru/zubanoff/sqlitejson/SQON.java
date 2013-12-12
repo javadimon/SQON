@@ -86,7 +86,7 @@ public interface SQON {
      * @param key
      * @return 
      */
-    public List<Map<Integer, String>> getValues(String key);
+    public List<SQONItem> getValues(String key);
     
     /**
      * Get value by id
@@ -100,6 +100,15 @@ public interface SQON {
      * @param sqlRequest
      * @return 
      */
-    public List<Map<Integer, String>> getValuesByIndex(String sqlRequest);
+    public List<SQONItem> getValuesByIndex(String sqlRequest);
+    
+    /**
+     * 
+     * @param key
+     * @param dateStart
+     * @param dateEnd
+     * @return 
+     */
+    public List<SQONItem> getValuesByKeyAndDate(String key, int dateStart, int dateEnd);
     
 }
