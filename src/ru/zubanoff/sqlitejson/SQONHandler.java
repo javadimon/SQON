@@ -185,7 +185,7 @@ public class SQONHandler implements SQON {
     }
     
     @Override
-    public List<SQONItem> getValuesByKeyAndDate(String key, int dateStart, int dateEnd){
+    public List<SQONItem> getValuesByKeyAndDateInterval(String key, int dateStart, int dateEnd){
         try {
             ArrayList<SQONItem> resultSet = new ArrayList<>();
             try (PreparedStatement statement = connection.prepareStatement(
@@ -210,6 +210,61 @@ public class SQONHandler implements SQON {
             Logger.getGlobal().log(Level.WARNING, null, e);
             return new ArrayList<>();
         }
+    }
+    
+    /**
+     * 
+     * @param key
+     * @param date
+     * @return SQONItem or null
+     */
+    @Override
+    public SQONItem getValuesByKeyAndDate(String key, int date){
+        try {
+            SQONItem item = null;
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT rowid, value, date, modify FROM main WHERE key = ? AND date = ?")) {
+                statement.setString(1, key);
+                statement.setInt(2, date);
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        item = new SQONItem(
+                                rs.getInt("rowid"),
+                                rs.getString("value"),
+                                rs.getInt("date"),
+                                rs.getInt("modify"));
+                    }
+                }
+            }
+
+            return item;
+
+        } catch (SQLException e) {
+            Logger.getGlobal().log(Level.WARNING, null, e);
+            return null;
+        }
+    }
+    
+    /**
+     * Add or modify single value. If value by key not present new value will be added, otherwise value will be modified.
+     * @param key
+     * @param value 
+     * @return  
+     */
+    @Override
+    public boolean addOrModify(String key, String value){
+        int id = -1;
+        boolean success = false;
+        
+        List<SQONItem> list = getValues(key);
+        if(list.isEmpty()){
+            id = insert(key, value);
+        } else {
+            SQONItem item = list.get(0);
+            success = update(item.getRowid(), value);
+        }
+        
+        return id >= 0 || success != false;
     }
 
 }

@@ -60,7 +60,7 @@ public class Test {
     }
     
     private void testGetValuesByKeyAndDate(){
-        List<SQONItem> values = handler.getValuesByKeyAndDate("employee", 0, 1386852650);
+        List<SQONItem> values = handler.getValuesByKeyAndDateInterval("employee", 0, 1386852650);
         System.out.println(values);
     }
     

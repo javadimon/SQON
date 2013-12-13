@@ -109,6 +109,22 @@ public interface SQON {
      * @param dateEnd
      * @return 
      */
-    public List<SQONItem> getValuesByKeyAndDate(String key, int dateStart, int dateEnd);
+    public List<SQONItem> getValuesByKeyAndDateInterval(String key, int dateStart, int dateEnd);
+    
+    /**
+     * 
+     * @param key
+     * @param date
+     * @return 
+     */
+    public SQONItem getValuesByKeyAndDate(String key, int date);
+    
+    /**
+     * Add or modify single value. If value by key not present new value will be added, otherwise value will be modified.
+     * @param key
+     * @param value 
+     * @return  
+     */
+    public boolean addOrModify(String key, String value);
     
 }
