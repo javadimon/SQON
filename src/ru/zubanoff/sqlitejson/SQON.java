@@ -19,6 +19,15 @@ public interface SQON {
     public int insert(String key, String value);
     
     /**
+     * 
+     * @param key
+     * @param value
+     * @param timestamp
+     * @return 
+     */
+    public int insert(String key, String value, int timestamp);
+    
+    /**
      * Add record without indexing
      * @param key
      * @param value

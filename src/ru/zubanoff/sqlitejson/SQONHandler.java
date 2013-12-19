@@ -59,6 +59,25 @@ public class SQONHandler implements SQON {
             return -1;
         }
     }
+    
+    @Override
+    public int insert(String key, String value, int timestamp) {
+        try {
+            try (PreparedStatement statement = connection.prepareStatement("INSERT INTO main VALUES(?, ?, ?, ?)")) {
+                statement.setString(1, key);
+                statement.setString(2, value);
+                statement.setInt(3, timestamp);
+                statement.setInt(4, timestamp);
+                statement.executeUpdate();
+            }
+
+            return getLastInsertId();
+
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, null, e);
+            return -1;
+        }
+    }
 
     @Override
     public int insert(String key, String value, String... indexedValueKeys) {
